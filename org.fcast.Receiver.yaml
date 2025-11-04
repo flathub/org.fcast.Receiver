@@ -36,7 +36,8 @@ modules:
       - npm install --offline
       # run the build
       - UPDATER=false npm run build
-      - . ../../electron-forge-arch-args.sh; npm run package -- --platform="linux" $ELECTRON_FORGE_ARCH_ARGS
+      - . ../../electron-forge-arch-args.sh; npm run package -- --platform="linux"
+        $ELECTRON_FORGE_ARCH_ARGS
       # Bundle app and dependencies
       - cp -a out/fcast-receiver-linux*64 /app/fcast-receiver
       # Install app wrapper
@@ -48,10 +49,10 @@ modules:
       # assets/icons/app/icon1024.png is the icon I think would best meet the store guidelines
       - mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps
       - ffmpeg -width 128 -i assets/icons/app/icon1024.png -vf scale=128:-1 ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/org.fcast.Receiver.png
-     
+
       - mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps
       - ffmpeg -width 256 -i assets/icons/app/icon1024.png -vf scale=256:-1 ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/org.fcast.Receiver.png
-      
+
       - mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps
       - ffmpeg -width 512 -i assets/icons/app/icon1024.png -vf scale=512:-1 ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/org.fcast.Receiver.png
     post-install:
@@ -61,26 +62,27 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: 9d4ba9bfc038f35f39f06859013e1b0ffb3a8a69
+        commit: 88e71dd6285877902fd2055ea9b6ffa32bab6906
         x-checker-data:
           type: git
           url: https://gitlab.futo.org/videostreaming/fcast/-/tags
           tag-pattern: ^electron-v([0-9.]+)$
           is-main-source: true
 
+        tag: electron-v2.2.2
       - type: patch
         path: patches/nonetwork.patch
-      
+
       - type: patch
         path: patches/captions.patch
-      
+
       - npm-sources.json
-      
+
       - type: file
         path: electron-forge-arch-args.sh
 
       - type: script
         dest-filename: run.sh
         commands:
-          - zypak-wrapper /app/fcast-receiver/fcast-receiver.app  --no-sandbox --password-store=basic "$@"
-  
+          - zypak-wrapper /app/fcast-receiver/fcast-receiver.app  --no-sandbox --password-store=basic
+            "$@"
