@@ -62,14 +62,14 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: caa4af69f34e0444e94e21b87a30d8cd1c1d0b6d
+        commit: f260641e26b281b1d0eb648105ac83a9745f7907
         x-checker-data:
           type: git
           url: https://gitlab.futo.org/videostreaming/fcast/-/tags
           tag-pattern: ^electron-v([0-9.]+)$
           is-main-source: true
 
-        tag: electron-v2.2.3
+        tag: electron-v2.2.4
       - type: patch
         path: patches/nonetwork.patch
 
