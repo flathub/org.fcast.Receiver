@@ -2,11 +2,11 @@ app-id: org.fcast.Receiver
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-nightly
+  - org.freedesktop.Sdk.Extension.llvm20
 
-base: org.electronjs.Electron2.BaseApp
-base-version: '25.08'
-
-command: run.sh
+command: fcast-receiver
 finish-args:
   - --share=network
   - --socket=pulseaudio
@@ -14,36 +14,43 @@ finish-args:
   - --socket=fallback-x11
   - --share=ipc
   - --device=dri
-  - --talk-name=org.kde.StatusNotifierWatcher
-  - --system-talk-name=org.fcast.Receiver
-  - --env=ELECTRON_TRASH=gio
-sdk-extensions:
-  - org.freedesktop.Sdk.Extension.node22
-build-options:
-  append-path: /usr/lib/sdk/node22/bin
-  env:
-    NPM_CONFIG_LOGLEVEL: info
+  # - --talk-name=org.kde.StatusNotifierWatcher
+  # - --system-talk-name=org.fcast.Receiver
 modules:
+  - name: libseat
+    buildsystem: meson
+    config-opts:
+      - -Dexamples=disabled
+      - -Dman-pages=disabled
+    sources:
+      - type: git
+        url: https://git.sr.ht/~kennylevinsen/seatd
+        tag: 0.9.2
+        commit: a3c56c324c3a84474cc1615d94ccd6a6255d0c10
+
+  - name: gst-plugins-good
+    buildsystem: meson
+    config-opts:
+      - -Ddoc=disabled
+      - -Dtests=disabled
+    sources:
+      - type: archive
+        url: https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.26.9.tar.xz
+        sha256: f38566fb53ae56b7019a039475311756a28eb978a781154d67813dcb551ff5fe
+
   - name: fcast-receiver
     buildsystem: simple
     build-options:
+      append-path: /usr/lib/sdk/rust-nightly/bin:/usr/lib/sdk/llvm20/bin
+      prepend-ld-library-path: /usr/lib/sdk/llvm20/lib
       env:
-        XDG_CACHE_HOME: /run/build/fcast-receiver/flatpak-node/cache
-        npm_config_cache: /run/build/fcast-receiver/flatpak-node/npm-cache
-        npm_config_nodedir: /usr/lib/sdk/node22
-        npm_config_offline: 'true'
-    subdir: receivers/electron/
+        CARGO_HOME: /run/build/fcast-receiver/cargo
+        CARGO_NET_OFFLINE: 'true'
+        SKIA_BINARIES_URL: file:///run/build/fcast-receiver/skia-binaries/skia-binaries-b98dbc3ef012d6f67535-x86_64-unknown-linux-gnu-gl-pdf-textlayout-vulkan.tar.gz
     build-commands:
-      # Install npm dependencies
-      - npm install --offline
-      # run the build
-      - UPDATER=false npm run build
-      - . ../../electron-forge-arch-args.sh; npm run package -- --platform="linux"
-        $ELECTRON_FORGE_ARCH_ARGS
-      # Bundle app and dependencies
-      - cp -a out/fcast-receiver-linux*64 /app/fcast-receiver
-      # Install app wrapper
-      - install -Dm755 -t /app/bin/ ../../run.sh
+      - cargo --offline fetch --manifest-path Cargo.toml --verbose
+      - cargo build --offline --release -p desktop-receiver
+      - install -Dm0755 target/release/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
       # Install metadata
       - install -Dm 0644 ../../.flatpak/org.fcast.Receiver.desktop ${FLATPAK_DEST}/share/applications/org.fcast.Receiver.desktop
       - install -Dm 0644 ../../.flatpak/org.fcast.Receiver.metainfo.xml  ${FLATPAK_DEST}/share/metainfo/org.fcast.Receiver.metainfo.xml
@@ -58,30 +65,22 @@ modules:
       - mkdir -p ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps
       - ffmpeg -width 512 -i assets/icons/app/icon1024.png -vf scale=512:-1 ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/org.fcast.Receiver.png
     post-install:
-      - install -Dm0644 ../../LICENSE -t ${FLATPAK_DEST}/share/licenses/$FLATPAK_ID/fcast-receiver
-      - install -Dm0644 /app/fcast-receiver/LICENSE -t ${FLATPAK_DEST}/share/licenses/$FLATPAK_ID/electron
-      - install -Dm0644 /app/fcast-receiver/LICENSES.chromium.html -t ${FLATPAK_DEST}/share/licenses/$FLATPAK_ID/chromium
+      - install -Dm0644 senders/extra/LICENSE-GPL -t ${FLATPAK_DEST}/share/licenses/$FLATPAK_ID/fcast-receiver
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: f260641e26b281b1d0eb648105ac83a9745f7907
-        x-checker-data:
-          type: git
-          url: https://gitlab.futo.org/videostreaming/fcast/-/tags
-          tag-pattern: ^electron-v([0-9.]+)$
-          is-main-source: true
+        commit: 34dfc43c5675e2533d3b86a91d7b7fb9662df773
 
-        tag: electron-v2.2.4
-      - type: patch
-        path: patches/nonetwork.patch
+        # x-checker-data:
+        #   type: git
+        #   url: https://gitlab.futo.org/videostreaming/fcast/-/tags
+        #   tag-pattern: ^receiver-v([0-9.]+)$
+        #   is-main-source: true
 
-      - npm-sources.json
+        # tag: receiver-v2.2.4
+      - cargo-sources.json
 
       - type: file
-        path: electron-forge-arch-args.sh
-
-      - type: script
-        dest-filename: run.sh
-        commands:
-          - zypak-wrapper /app/fcast-receiver/fcast-receiver.app  --no-sandbox --password-store=basic
-            "$@"
+        url: https://github.com/rust-skia/skia-binaries/releases/download/0.89.1/skia-binaries-b98dbc3ef012d6f67535-x86_64-unknown-linux-gnu-gl-pdf-textlayout-vulkan.tar.gz
+        sha256: 692d0f450e7d7b0aac09ffb9f9b66c0f9f4a194a8b7a52b8db81d70577cc09ff
+        dest: skia-binaries
