@@ -1,11 +1,14 @@
 build:
-	flatpak run org.flatpak.Builder --user --install --force-clean build-dir org.fcast.Receiver.yaml
+	flatpak run org.flatpak.Builder --user --install --force-clean --repo repo-dir build-dir org.fcast.Receiver.yaml
 
 build-offline:
 	flatpak run org.flatpak.Builder --user --install --disable-download --force-clean build-dir org.fcast.Receiver.yaml
 
 build-sandbox:
 	flatpak run org.flatpak.Builder --force-clean --sandbox --user --install --install-deps-from=flathub --ccache --mirror-screenshots-url=https://dl.flathub.org/media/ --repo=repo ./build-dir org.fcast.Receiver.yaml
+
+build-bundle:
+	flatpak build-bundle repo-dir fcast-receiver.flatpak org.fcast.Receiver
 
 run:
 	flatpak run org.fcast.Receiver
