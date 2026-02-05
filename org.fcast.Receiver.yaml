@@ -80,7 +80,7 @@ modules:
       env:
         CARGO_HOME: /run/build/fcast-receiver/cargo
         CARGO_NET_OFFLINE: 'true'
-        SKIA_BINARIES_URL: file:///run/build/fcast-receiver/skia-binaries/skia-binaries-b98dbc3ef012d6f67535-x86_64-unknown-linux-gnu-gl-pdf-textlayout-vulkan.tar.gz
+        SKIA_BINARIES_URL: file:///run/build/fcast-receiver/skia-binaries/skia-binaries-da4579b39b75fa2187c5-x86_64-unknown-linux-gnu-gl-pdf-textlayout-vulkan.tar.gz
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
       - cargo build --offline --release -p desktop-receiver
@@ -103,7 +103,7 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: 34dfc43c5675e2533d3b86a91d7b7fb9662df773
+        commit: c6f62c83e75967cea7aaf62bdc237aaef12055e2
 
         # x-checker-data:
         #   type: git
@@ -115,6 +115,6 @@ modules:
       - cargo-sources.json
 
       - type: file
-        url: https://github.com/rust-skia/skia-binaries/releases/download/0.89.1/skia-binaries-b98dbc3ef012d6f67535-x86_64-unknown-linux-gnu-gl-pdf-textlayout-vulkan.tar.gz
-        sha256: 692d0f450e7d7b0aac09ffb9f9b66c0f9f4a194a8b7a52b8db81d70577cc09ff
+        url: https://github.com/rust-skia/skia-binaries/releases/download/0.90.0/skia-binaries-da4579b39b75fa2187c5-x86_64-unknown-linux-gnu-gl-pdf-textlayout-vulkan.tar.gz
+        sha256: 0075f8a1a3f8cf951c43a6fc12c60fe6efc337a1c639b617f2b25cfeafebbdd8
         dest: skia-binaries
