@@ -69,8 +69,8 @@ modules:
       - -Dtests=disabled
     sources:
       - type: archive
-        url: https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.26.9.tar.xz
-        sha256: f38566fb53ae56b7019a039475311756a28eb978a781154d67813dcb551ff5fe
+        url: https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.26.10.tar.xz
+        sha256: 7beacb5daba3c6751ebc1c85017d9b1d6de64e24798125932c73c8b1dbeb3bc9
 
   - name: fcast-receiver
     buildsystem: simple
@@ -103,7 +103,9 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: c6f62c83e75967cea7aaf62bdc237aaef12055e2
+        commit: 87a6611dcb04cee49586e0bd2300284363623d76
+        # Note: committing modified flatpak-cargo-generator.py for now since there are issues using official tools with the source project using the same crate
+        # from multiple different upstream repos (cargo vendor failing).
 
         # x-checker-data:
         #   type: git
