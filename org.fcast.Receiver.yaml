@@ -26,10 +26,8 @@ modules:
         CARGO_NET_OFFLINE: 'true'
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
-      - cargo build --offline --profile release-lto -p desktop-receiver --features static-gst-plugins
-      # - cargo build --offline -p desktop-receiver
-      - install -Dm0755 target/release-lto/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
-      # - install -Dm0755 target/debug/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
+      - cargo build --offline --release -p desktop-receiver --features static-gst-plugins
+      - install -Dm0755 target/release/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
 
       # Install metadata
       - install -Dm 0644 .flatpak/org.fcast.Receiver.desktop ${FLATPAK_DEST}/share/applications/org.fcast.Receiver.desktop
@@ -44,5 +42,5 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: ed6a99baaeb28e0d9e3ff54af909550f816c545f
+        commit: d0e799072441f0d3ebd68c8f7269f23337b113f1
       - cargo-sources.json
