@@ -34,13 +34,13 @@ modules:
       - install -Dm 0644 .flatpak/org.fcast.Receiver.metainfo.xml  ${FLATPAK_DEST}/share/metainfo/org.fcast.Receiver.metainfo.xml
 
       # Install icons
-      - install -Dm0644 receivers/experimental/extra/icon128.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/org.fcast.Receiver.png
-      - install -Dm0644 receivers/experimental/extra/icon256.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/org.fcast.Receiver.png
-      - install -Dm0644 receivers/experimental/extra/icon512.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/org.fcast.Receiver.png
+      - install -Dm0644 receivers/extra/icon128.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/org.fcast.Receiver.png
+      - install -Dm0644 receivers/extra/icon256.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/org.fcast.Receiver.png
+      - install -Dm0644 receivers/extra/icon512.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/org.fcast.Receiver.png
     post-install:
       - install -Dm0644 senders/extra/LICENSE-GPL -t ${FLATPAK_DEST}/share/licenses/$FLATPAK_ID/fcast-receiver
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: 549ac9c5fbb70ba43792cf06edd5109420d534dc
+        commit: e87e05a2227b976629cb9a412f8f8a68598f9e47
       - cargo-sources.json
