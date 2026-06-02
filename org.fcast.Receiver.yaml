@@ -42,5 +42,5 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: e87e05a2227b976629cb9a412f8f8a68598f9e47
+        commit: 8d04d3c1c8285a48482e1454759ba81f7c83877e
       - cargo-sources.json
