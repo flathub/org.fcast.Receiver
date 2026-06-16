@@ -29,11 +29,9 @@ modules:
       - cargo build --offline --release -p desktop-receiver --features static-gst-plugins
       - install -Dm0755 target/release/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
 
-      # Install metadata
       - install -Dm 0644 .flatpak/org.fcast.Receiver.desktop ${FLATPAK_DEST}/share/applications/org.fcast.Receiver.desktop
       - install -Dm 0644 .flatpak/org.fcast.Receiver.metainfo.xml  ${FLATPAK_DEST}/share/metainfo/org.fcast.Receiver.metainfo.xml
 
-      # Install icons
       - install -Dm0644 receivers/extra/icon128.png ${FLATPAK_DEST}/share/icons/hicolor/128x128/apps/org.fcast.Receiver.png
       - install -Dm0644 receivers/extra/icon256.png ${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/org.fcast.Receiver.png
       - install -Dm0644 receivers/extra/icon512.png ${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/org.fcast.Receiver.png
@@ -42,5 +40,5 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: 8d04d3c1c8285a48482e1454759ba81f7c83877e
+        commit: bc6460aef8ebd1ff1ab4bcf1fe1d1927c18b23c7
       - cargo-sources.json
