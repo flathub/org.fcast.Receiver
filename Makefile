@@ -1,3 +1,4 @@
+.PHONY: build
 build:
 	flatpak run org.flatpak.Builder --user --install --force-clean --repo repo-dir build-dir org.fcast.Receiver.yaml
 
