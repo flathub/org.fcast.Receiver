@@ -15,7 +15,51 @@ finish-args:
   - --share=ipc
   - --device=dri
   - --talk-name=org.kde.StatusNotifierWatcher
+
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /lib/cmake
+  - /share/man
+  - /bin/flatc
+  - /bin/srt-ffplay
+  - '*.a'
+  - '*.la'
+
 modules:
+  - name: libsrt
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_LIBDIR=lib
+      - -DENABLE_APPS=OFF
+      - -DENABLE_SHARED=ON
+      - -DENABLE_STATIC=OFF
+      - -DENABLE_ENCRYPTION=ON
+    sources:
+      - type: archive
+        url: https://github.com/Haivision/srt/archive/refs/tags/v1.5.6.tar.gz
+        sha256: 2c4980c2c4cfd142d21b829d939dc51db9c6628af5967fff62fd7290769569c7
+
+  - name: libass
+    buildsystem: autotools
+    config-opts:
+      - --disable-static
+    sources:
+      - type: archive
+        url: https://github.com/libass/libass/releases/download/0.17.5/libass-0.17.5.tar.xz
+        sha256: 2dca25c0e0c837ddf00b52011b3f82cac1e4ddd3ad018227806b0c2288864acc
+
+  - name: flatbuffers
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DFLATBUFFERS_BUILD_TESTS=OFF
+    sources:
+      - type: archive
+        url: https://github.com/google/flatbuffers/archive/refs/tags/v25.12.19.tar.gz
+        sha256: f81c3162b1046fe8b84b9a0dbdd383e24fdbcf88583b9cb6028f90d04d90696a
+
   - name: fcast-receiver
     buildsystem: simple
     build-options:
@@ -26,7 +70,7 @@ modules:
         CARGO_NET_OFFLINE: 'true'
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
-      - cargo build --offline --release -p desktop-receiver --features static-gst-plugins
+      - cargo --offline run -p xtask -- receiver build-static --source gstreamer --offline --static-scope gstreamer
       - install -Dm0755 target/release/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
 
       - install -Dm 0644 .flatpak/org.fcast.Receiver.desktop ${FLATPAK_DEST}/share/applications/org.fcast.Receiver.desktop
@@ -40,5 +84,17 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: 012bb79f5f6616c605b1105c851177e9f2162a41
+        commit: dee1e7ba07e6037f46f92a6892e757125ed74fff
       - cargo-sources.json
+
+      - type: git
+        url: https://gitlab.freedesktop.org/gstreamer/gstreamer.git
+        tag: '1.29.2'
+        commit: badd9563b2ac3117ea2a99348bbe46298d6992ec
+        disable-submodules: true
+        dest: gstreamer
+
+      - type: git
+        url: https://gitlab.freedesktop.org/gstreamer/meson-ports/ffmpeg.git
+        commit: cde7209117ec2be9da087b9e5f96d48450fdecd2
+        dest: gstreamer/subprojects/FFmpeg
