@@ -3,12 +3,13 @@ runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 sdk-extensions:
-  - org.freedesktop.Sdk.Extension.rust-nightly
+  - org.freedesktop.Sdk.Extension.rust-stable
   - org.freedesktop.Sdk.Extension.llvm20
 
 command: fcast-receiver
 finish-args:
   - --share=network
+  - --filesystem=xdg-run/pipewire-0:ro
   - --socket=pulseaudio
   - --socket=wayland
   - --socket=fallback-x11
@@ -21,7 +22,6 @@ cleanup:
   - /lib/pkgconfig
   - /lib/cmake
   - /share/man
-  - /bin/flatc
   - /bin/srt-ffplay
   - '*.a'
   - '*.la'
@@ -50,27 +50,30 @@ modules:
         url: https://github.com/libass/libass/releases/download/0.17.5/libass-0.17.5.tar.xz
         sha256: 2dca25c0e0c837ddf00b52011b3f82cac1e4ddd3ad018227806b0c2288864acc
 
-  - name: flatbuffers
-    buildsystem: cmake-ninja
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DFLATBUFFERS_BUILD_TESTS=OFF
-    sources:
-      - type: archive
-        url: https://github.com/google/flatbuffers/archive/refs/tags/v25.12.19.tar.gz
-        sha256: f81c3162b1046fe8b84b9a0dbdd383e24fdbcf88583b9cb6028f90d04d90696a
-
   - name: fcast-receiver
     buildsystem: simple
     build-options:
-      append-path: /usr/lib/sdk/rust-nightly/bin:/usr/lib/sdk/llvm20/bin
+      append-path: /usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/llvm20/bin
       prepend-ld-library-path: /usr/lib/sdk/llvm20/lib
       env:
         CARGO_HOME: /run/build/fcast-receiver/cargo
         CARGO_NET_OFFLINE: 'true'
+        # The static link line interleaves ~100 archives with dynamic system
+        # libs. bfd is single pass and cannot resolve helper archives appended
+        # after the dynamic libs they reference, so use clang + lld and
+        # override the repo's wild pin.
+        CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER: clang
+        CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: clang
+        # RUSTFLAGS (unlike the CARGO_TARGET_* form, which merges) fully
+        # replaces the repo config's target rustflags.
+        RUSTFLAGS: -C link-arg=-fuse-ld=lld
+        # The gstreamer-src build script uses the vendored checkout below and
+        # meson runs with --wrap-mode=nodownload against the vendored wraps.
+        GSTREAMER_SRC_SOURCE: /run/build/fcast-receiver/gstreamer
+        GSTREAMER_SRC_OFFLINE: '1'
     build-commands:
       - cargo --offline fetch --manifest-path Cargo.toml --verbose
-      - cargo --offline run -p xtask -- receiver build-static --source gstreamer --offline --static-scope gstreamer
+      - cargo --offline run -p xtask -- receiver build-static --release
       - install -Dm0755 target/release/desktop-receiver ${FLATPAK_DEST}/bin/fcast-receiver
 
       - install -Dm 0644 .flatpak/org.fcast.Receiver.desktop ${FLATPAK_DEST}/share/applications/org.fcast.Receiver.desktop
@@ -84,13 +87,12 @@ modules:
     sources:
       - type: git
         url: https://gitlab.futo.org/videostreaming/fcast.git
-        commit: dee1e7ba07e6037f46f92a6892e757125ed74fff
+        commit: 54b70120c44733140ed8a958603d6dbb71030b38
       - cargo-sources.json
 
       - type: git
-        url: https://gitlab.freedesktop.org/gstreamer/gstreamer.git
-        tag: '1.29.2'
-        commit: badd9563b2ac3117ea2a99348bbe46298d6992ec
+        url: https://gitlab.futo.org/fcast/gstreamer.git
+        commit: 5172278ccee7353f1e142bbf3e5a2d8d45525992
         disable-submodules: true
         dest: gstreamer
 
@@ -98,3 +100,47 @@ modules:
         url: https://gitlab.freedesktop.org/gstreamer/meson-ports/ffmpeg.git
         commit: cde7209117ec2be9da087b9e5f96d48450fdecd2
         dest: gstreamer/subprojects/FFmpeg
+
+      - type: git
+        url: https://gitlab.freedesktop.org/gstreamer/orc.git
+        commit: 088b7ff690533d0b5d9e3f7331ed42f178453187
+        dest: gstreamer/subprojects/orc
+
+      - type: archive
+        url: https://libnice.freedesktop.org/releases/libnice-0.1.23.tar.gz
+        sha256: 618fc4e8de393b719b1641c1d8eec01826d4d39d15ade92679d221c7f5e4e70d
+        dest: gstreamer/subprojects/libnice-0.1.23
+
+      - type: file
+        url: https://github.com/xiph/flac/releases/download/1.5.0/flac-1.5.0.tar.xz
+        sha256: f2c1c76592a82ffff8413ba3c4a1299b6c7ab06c734dee03fd88630485c2b920
+        dest: gstreamer/subprojects/packagecache
+        dest-filename: flac-1.5.0.tar.xz
+      - type: file
+        url: https://wrapdb.mesonbuild.com/v2/flac_1.5.0-3/get_patch
+        sha256: 56adbbda2fbfcfba5aaf4a9eb326c37d95889215352d0336a14611608257dcfe
+        dest: gstreamer/subprojects/packagecache
+        dest-filename: flac_1.5.0-3_patch.zip
+
+      - type: file
+        url: http://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
+        sha256: ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e
+        dest: gstreamer/subprojects/packagecache
+        dest-filename: lame-3.100.tar.gz
+      - type: file
+        url: https://wrapdb.mesonbuild.com/v2/lame_3.100-11/get_patch
+        sha256: 2cf0d047bfa5d444d5a13b85816d05895e587f61cdf9ee49a7fc40fe360ded0d
+        dest: gstreamer/subprojects/packagecache
+        dest-filename: lame_3.100-11_patch.zip
+
+      - type: file
+        url: https://github.com/cisco/openh264/archive/refs/tags/v2.6.0.tar.gz
+        sha256: 558544ad358283a7ab2930d69a9ceddf913f4a51ee9bf1bfb9e377322af81a69
+        dest: gstreamer/subprojects/packagecache
+        dest-filename: openh264-2.6.0.tar.gz
+
+      - type: file
+        url: https://downloads.xiph.org/releases/opus/opus-1.6.1.tar.gz
+        sha256: 6ffcb593207be92584df15b32466ed64bbec99109f007c82205f0194572411a1
+        dest: gstreamer/subprojects/packagecache
+        dest-filename: opus-1.6.1.tar.gz
